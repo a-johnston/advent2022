@@ -10,11 +10,12 @@ if __name__ == '__main__':
     if hasattr(mod, 'solve'):
         solver = mod.solve
         args = sys.argv[2:]
-    elif hasattr(mod, 'solve_p1') and hasattr(mod, 'solve_p2') and len(sys.argv) > 2:
-        if '1' in str(sys.argv[-1]):
-            solver = mod.solve_p1
-        else:
-            solver = mod.solve_p2
+    elif all((
+        len(sys.argv) > 2,
+        sys.argv[-1].startswith('p'),
+        hasattr(mod, f'solve_{sys.argv[-1]}'),
+    )):
+        solver = getattr(mod, f'solve_{sys.argv[-1]}')
         args = sys.argv[2:-1]
     else:
         print(f'bad module {day}')
