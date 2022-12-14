@@ -27,4 +27,5 @@ if __name__ == '__main__':
             continue
         print(f'\n{file}:')
         with open(os.path.join(day, file)) as fp:
-            print(' {}'.format(solver(map(str.strip, fp.readlines()), *args)))
+            solution = solver((l.rstrip('\n') for l in fp.readlines()), *args)
+            print(f' {solution}')
