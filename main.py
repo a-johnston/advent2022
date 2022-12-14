@@ -25,5 +25,8 @@ if __name__ == '__main__':
             if not file.endswith('.txt'):
                 continue
             with open(os.path.join(day, file)) as fp:
-                solution = solver((l.rstrip('\n') for l in fp.readlines()), *sys.argv[2:])
+                lines = (l.rstrip('\n') for l in fp.readlines())
+                solution = str(solver(lines, *sys.argv[2:]))
+                if '\n' in solution:
+                    solution = '\n ' + solution.replace('\n', '\n ')
                 print(f'{file:<12}: {solution}')
