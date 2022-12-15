@@ -16,6 +16,8 @@ def solve(lines, floor=False):
     w = max_x - min_x + 1
     h = max_y + 1
 
+    # If we want an "infinite" floor- sand is bounded by how far it get left or
+    # right so just stretch out the grid and adjust the x offset accordingly.
     if floor:
         h += 2
         min_x -= h
@@ -23,6 +25,8 @@ def solve(lines, floor=False):
 
     grid = [[AIR] * w for _ in range(h)]
 
+    # Similarly, rather than adding a check for a true infinite floor, just
+    # fill in the finite of the streched grid.
     if floor:
         for x in range(w):
             grid[-1][x] = ROCK
@@ -49,13 +53,17 @@ def solve(lines, floor=False):
 
     # Drop sand
     moves = ((0, 1), (-1, 1), (1, 1))
+    path = [(500 - min_x, 0)]
     def sim_sand():
-        x, y = 500 - min_x, 0
+        if not path:
+            return False
+        x, y = path.pop()
         while valid(x, y) and grid[y][x] == AIR:
             for dx, dy in moves:
                 if not valid(x + dx, y + dy):
                     return False
                 if grid[y + dy][x + dx] == AIR:
+                    path.append((x, y))
                     x += dx
                     y += dy
                     break
