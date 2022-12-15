@@ -1,4 +1,4 @@
-def solve(lines, topn):
+def solve(lines, topn=1):
     topn = int(topn)
     top_vals = []
     cval = 0
