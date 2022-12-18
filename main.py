@@ -60,7 +60,7 @@ def _run_solver(solver, file):
             solution = '\n  ' + solution.replace('\n', '\n  ')
         print(f'\n {filename:<12}: {solution}')
         duration = (datetime.now() - start).total_seconds()
-        print(f' Completed in {duration:0.2}s')
+        print(f' Completed in {duration:0.4f}s')
 
 
 def main():
@@ -76,7 +76,7 @@ def main():
             for file in _get_text_files(day):
                 _run_solver(solver, file)
     duration = (datetime.now() - start).total_seconds()
-    print(f'\nOverall completed in {duration:0.2}s')
+    print(f'\nOverall completed in {duration:0.4f}s')
 
 
 if __name__ == '__main__':
