@@ -65,14 +65,18 @@ def _run_solver(solver, file):
 
 def main():
     start = datetime.now()
+    is_batch = len(sys.argv) > 1 and '..' in sys.argv[1]
     days = _get_days(sys.argv[1] if len(sys.argv) > 1 else '-1')
-    print('Running AoC22 with args: ' + ' '.join(sys.argv[1:]))
+    print('Running AoC22 with args: ' + (' '.join(sys.argv[1:]) or '(none)'))
     for day in days:
         solvers = _get_solvers(day)
         print('\n' + day.replace('day', 'Day '))
         for name, solver in solvers.items():
             if name:
                 print('\n' + name)
+            if is_batch and 'slow' in (solver.__doc__ or '').lower():
+                print(' Skipping slow case in batch mode')
+                continue
             for file in _get_text_files(day):
                 _run_solver(solver, file)
     duration = (datetime.now() - start).total_seconds()
