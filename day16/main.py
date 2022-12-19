@@ -111,5 +111,8 @@ def solve_p1(lines):
 
 
 def solve_p2(lines):
+    """Slow; this takes a few minutes but the search space was still too big for
+    the 8 GB of ram on this somewhat old laptop - I had to borrow a friend's work
+    laptop with 32 GB haha. I may revisit with further improvements."""
     setup(lines)
     return intro_to_algorithms(26, (0, 0))
