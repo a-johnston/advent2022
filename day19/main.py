@@ -5,6 +5,15 @@ from multiprocessing import Pool
 resources = {'ore': 3, 'clay': 2, 'obsidian': 1, 'geode': 0}
 
 
+class hashlist(list):
+    def __hash__(self):
+        h = 0
+        for v in self:
+            h *= 1000
+            h += v
+        return h
+
+
 def parse(lines, limit=None):
     blueprints = {}
     for line in lines:
@@ -39,19 +48,6 @@ def set_rules(blueprint):
                 staff_maxes[other] = count
 
 
-def add_tuple(t, i, x):
-    t = list(t)
-    t[i] += x
-    return tuple(t)
-
-
-def mul_tuple(t, x):
-    return tuple(x * y for y in t)
-
-def add_tuples(*t):
-    return tuple(sum(x) for x in zip(*t))
-
-
 blueprint_best = 0
 def record_result(val, force=False):
     global blueprint_best
@@ -60,7 +56,7 @@ def record_result(val, force=False):
     return val
 
 
-def should_discard(time, current, staff, supply):
+def should_discard(time, current):
     if time < 1:
         return True
     possible = current + math.floor((time - 1) * time / 2)
@@ -69,7 +65,7 @@ def should_discard(time, current, staff, supply):
 
 def intro_to_algorithms(time, staff, supply):
     current_result = supply[0] + staff[0] * max(0, time)
-    if should_discard(time, current_result, staff, supply):
+    if should_discard(time, current_result):
         return record_result(current_result)
 
     # Figure out what we can buy
@@ -77,27 +73,30 @@ def intro_to_algorithms(time, staff, supply):
     for kind, recipe in rules.items():
         if kind in staff_maxes and staff[kind] >= staff_maxes[kind]:
             continue
-        new_supply = supply
+        new_supply = hashlist(supply)
         make_time = 0
         for resource, count in recipe.items():
             if staff[resource] == 0:
                 break
             rounds = math.ceil((count - new_supply[resource]) / staff[resource])
             make_time = max(make_time, rounds)
-            new_supply = add_tuple(new_supply, resource, -count)
+            new_supply[resource] -= count
         else:
             if make_time < time - 1:
-                states.append((time - make_time - 1, add_tuple(staff, kind, 1), new_supply))
+                new_staff = hashlist(staff)
+                new_staff[kind] += 1
+                states.append(hashlist([time - make_time - 1, new_staff, new_supply]))
     if not states:
         return record_result(current_result)
 
     # Add newly collected resources to possible states, adding the staff we start
     # with instead of the staff we potentially just built.
-    for idx, (stime, sstaff, ssupply) in enumerate(states):
-        ssupply = add_tuples(ssupply, mul_tuple(staff, time - stime))
-        states[idx] = (stime, sstaff, ssupply)
+    for idx, state in enumerate(states):
+        d = time - state[0]
+        for i, x in enumerate(staff):
+            state[2][i] += x * d
 
-    best = supply[0]
+    best = current_result
     for state in states:
         val = intro_to_algorithms(*state)
         if val > best:
