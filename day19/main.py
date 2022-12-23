@@ -94,7 +94,6 @@ def intro_to_algorithms(time, staff, supply):
 def _solve(time, idx, blueprint):
     set_rules(blueprint)
     val = intro_to_algorithms(time, (0, 0, 0, 1), (0, 0, 0, 0))
-    print(idx, ':', val)
     if time > 30:
         return val
     return val * idx
