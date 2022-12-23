@@ -1,15 +1,14 @@
 import math
-from functools import lru_cache
 from multiprocessing import Pool
 
 
 resources = {'ore': 3, 'clay': 2, 'obsidian': 1, 'geode': 0}
 
 
-def parse(lines, mode):
+def parse(lines, limit=None):
     blueprints = {}
     for line in lines:
-        if mode and len(blueprints) == 3:
+        if limit is not None and len(blueprints) == limit:
             break
         n, line = line.split(': ', 1)
         n = int(n[10:])
@@ -31,9 +30,9 @@ staff_maxes = {}
 def set_rules(blueprint):
     rules.clear()
     rules.update(blueprint)
-    intro_to_algorithms.cache_clear()
-    staff_maxes.update({1: 0, 2: 0, 3: 0})
+    record_result(0, True)
 
+    staff_maxes.update({1: 0, 2: 0, 3: 0})
     for recipe in rules.values():
         for other, count in recipe.items():
             if count > staff_maxes[other]:
@@ -53,10 +52,25 @@ def add_tuples(*t):
     return tuple(sum(x) for x in zip(*t))
 
 
-@lru_cache(None)
-def intro_to_algorithms(time, staff, supply):
+blueprint_best = 0
+def record_result(val, force=False):
+    global blueprint_best
+    if val > blueprint_best or force:
+        blueprint_best = val
+    return val
+
+
+def should_discard(time, current, staff, supply):
     if time < 1:
-        return supply[0]
+        return True
+    possible = current + math.floor((time - 1) * time / 2)
+    return possible <= blueprint_best
+
+
+def intro_to_algorithms(time, staff, supply):
+    current_result = supply[0] + staff[0] * max(0, time)
+    if should_discard(time, current_result, staff, supply):
+        return record_result(current_result)
 
     # Figure out what we can buy
     states = []
@@ -75,7 +89,7 @@ def intro_to_algorithms(time, staff, supply):
             if make_time < time - 1:
                 states.append((time - make_time - 1, add_tuple(staff, kind, 1), new_supply))
     if not states:
-        return supply[0] + staff[0] * time
+        return record_result(current_result)
 
     # Add newly collected resources to possible states, adding the staff we start
     # with instead of the staff we potentially just built.
@@ -88,7 +102,7 @@ def intro_to_algorithms(time, staff, supply):
         val = intro_to_algorithms(*state)
         if val > best:
             best = val
-    return best
+    return record_result(best)
 
 
 def _solve(time, idx, blueprint):
@@ -109,9 +123,12 @@ def mul(vals):
 def solve(lines, time=24, pool_size=None):
     time = int(time)
     total = 0
-    mode = time > 30
-    blueprints = parse(lines, mode)
-    func = mul if mode else sum
+    if time > 30:
+        blueprints = parse(lines, limit=3)
+        func = mul
+    else:
+        blueprints = parse(lines)
+        func = sum
     with Pool(int(pool_size) if pool_size else None) as pool:
         arglist = [(time, *item) for item in blueprints.items()]
         return func(pool.starmap(_solve, arglist))
