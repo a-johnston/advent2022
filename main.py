@@ -71,6 +71,7 @@ def main():
     for day in days:
         solvers = _get_solvers(day)
         print('\n' + day.replace('day', 'Day '))
+        print('-' * 20)
         for name, solver in solvers.items():
             if name:
                 print('\n' + name)
