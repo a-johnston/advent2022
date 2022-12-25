@@ -148,7 +148,7 @@ class GridP2(Grid):
 
     def _decode_from_edge(self, f, d, v):
         fx, fy, fd = self.faces[f]
-        d = (d - self.faces[f][2]) % len(dirs)
+        d = (d + fd) % len(dirs)
         if d == 0:
             return fx + v, fy
         if d == 1:
