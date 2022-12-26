@@ -111,7 +111,7 @@ def _get_faces(grid):
             edge_id = (nd - d) % len(dirs)
             new_id = _face_edges[n][edge_id]
             if new_id not in seen:
-                new_d = (_face_edges[new_id].index(n) - nd + 2 + d) % len(dirs)
+                new_d = (nd + 2 - _face_edges[new_id].index(n)) % len(dirs)
                 faces[new_id] = (nx, ny, new_d)
                 edge.add(new_id)
     return w, faces
@@ -121,7 +121,6 @@ class GridP2(Grid):
     def __init__(self, grid):
         super().__init__(grid)
         self.w, self.faces = _get_faces(grid)
-        print(self.w, len(self.faces), self.faces)
 
     def _get_face(self, x, y):
         for f, (fx, fy, d) in self.faces.items():
@@ -162,19 +161,14 @@ class GridP2(Grid):
     def move(self, x, y, d):
         dx, dy = dirs[d]
         f = self._get_face(x, y)
-        if f == -1:
-            raise ValueError(f'Bad move start {x} {y}')
-        nx, ny = x + dx, y + dy
-        nf = self._get_face(nx, ny)
-        nd = d
-        if nf == -1 or self.grid[ny][nx] == ' ':
-            nf = _face_edges[f][d]
-            fd = _face_edges[nf].index(f)
+        nx, ny, nd = x + dx, y + dy, d
+        if self._get_face(nx, ny) == -1:
+            nf = _face_edges[f][(d - self.faces[f][2]) % len(dirs)]
+            fd = self.faces[nf][2]
+            ei = _face_edges[nf].index(f)
             ev = self._encode_as_edge(f, d, x, y)
-            nx, ny = self._decode_from_edge(nf, fd, self.w - ev - 1)
-            nd = ((d - self.faces[f][2]) + self.faces[nf][2]) % len(dirs)
-        #elif f != nf and _face_edges[f][d] != nf:
-        #    raise ValueError(f'Got to {nf} from {f} with move {d}')
+            nx, ny = self._decode_from_edge(nf, ei, self.w - ev - 1)
+            nd = (ei + fd + 2) % len(dirs)
         if self.grid[ny][nx] == '#':
             return x, y, d, True
         return nx, ny, nd, False
@@ -197,9 +191,7 @@ def sim_grid(grid, moves):
                 x, y, d, hit = grid.move(x, y, d)
                 if hit:
                     break
-    d = (d - 1) % len(dirs)
-    print(x, y, d)
-    return 1000 * (y + 1) + 4 * (x + 1) + d
+    return 1000 * (y + 1) + 4 * (x + 1) + (d - 1) % len(dirs)
 
 
 def solve_p1(lines):
